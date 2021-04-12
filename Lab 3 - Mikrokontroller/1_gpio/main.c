@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#define GPIO ((NRF_GPIO_REGS*)__GPIO_BASE_ADDRESS__)
+#define GPIO ((NRF_GPIO_REGS*)0x50000000)
 
 typedef struct {
 	volatile uint32_t RESERVED0[321];
@@ -11,9 +11,19 @@ typedef struct {
 	volatile uint32_t DIR;
 	volatile uint32_t DIRSET;
 	volatile uint32_t DIRCLR;
-	volatile uint32_t RESERVED1[__RESERVED1_SIZE__];
+	volatile uint32_t RESERVED1[120];
 	volatile uint32_t PIN_CNF[32];
 } NRF_GPIO_REGS;
+
+int inp_btn_a()
+{
+	return (!GPIO->IN & (1 << 17));
+}
+
+int inp_btn_b()
+{
+	return (!GPIO->IN & (1 << 26));
+}
 
 int main(){
 	// Configure LED Matrix
@@ -28,12 +38,16 @@ int main(){
 
 	int sleep = 0;
 	while(1){
-
-		/* Check if button B is pressed;
-		 * turn on LED matrix if it is. */
-
-		/* Check if button A is pressed;
-		 * turn off LED matrix if it is. */
+		if(inp_btn_b())
+		{
+			GPIO->OUTCLR = GPIO->OUTCLR | (111111111 << 4);
+			GPIO->OUTSET = GPIO->OUTSET | (111 << 13);
+		}
+		if(inp_btn_a())
+		{
+			GPIO->OUTSET = GPIO->OUTCLR | (111111111 << 4);
+			GPIO->OUTCLR = GPIO->OUTSET | (111 << 13);
+		}
 
 		sleep = 10000;
 		while(--sleep);
